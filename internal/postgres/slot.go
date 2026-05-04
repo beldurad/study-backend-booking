@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/internships-backend/test-backend-beldurad/internal/domain"
+	app "github.com/internships-backend/test-backend-beldurad/internal"
 )
 
 const timeBound = 10 * 24 * time.Hour
@@ -61,7 +61,7 @@ func (s *SlotWorker) CreateSlotsForAllSchedules(ctx context.Context) {
 	}
 }
 
-func createNewSlotsBySchedule(ctx context.Context, tx *sql.Tx, schedule *domain.Schedule) error {
+func createNewSlotsBySchedule(ctx context.Context, tx *sql.Tx, schedule *app.Schedule) error {
 
 	lastDate, err := getLastSlotDate(ctx, tx, schedule.RoomID)
 	if err != nil {
@@ -87,7 +87,7 @@ func createNewSlotsBySchedule(ctx context.Context, tx *sql.Tx, schedule *domain.
 
 }
 
-func createSlotsForDay(ctx context.Context, tx *sql.Tx, schedule *domain.Schedule, day time.Time) error {
+func createSlotsForDay(ctx context.Context, tx *sql.Tx, schedule *app.Schedule, day time.Time) error {
 	if !schedule.ContainsWeekday(day.Weekday()) {
 		return nil
 	}
@@ -124,14 +124,14 @@ func createSlotsForDay(ctx context.Context, tx *sql.Tx, schedule *domain.Schedul
 		cur = day.Truncate(time.Second)
 	}
 
-	slots := make([]*domain.Slot, 10)
+	slots := make([]*app.Slot, 10)
 
 	for ; cur.Before(endTime); cur = cur.Add(30 * time.Minute) {
-		slotToAdd := domain.CreateSlot()
+		slotToAdd := app.CreateSlot()
 		slotToAdd.RoomID = schedule.RoomID
 		slotToAdd.StartTime = cur
 		slotToAdd.EndTime = cur.Add(30 * time.Minute)
-		slotToAdd.Status = domain.SlotStatusAvailable
+		slotToAdd.Status = app.SlotStatusAvailable
 		slots = append(slots, slotToAdd)
 	}
 
@@ -156,7 +156,7 @@ func getLastSlotDate(ctx context.Context, tx *sql.Tx, roomID string) (time.Time,
 	return result, nil
 }
 
-func saveAllSlots(ctx context.Context, tx *sql.Tx, slots []*domain.Slot) error {
+func saveAllSlots(ctx context.Context, tx *sql.Tx, slots []*app.Slot) error {
 	const query = `
 		INSERT INTO slot (id, room_id, start_time, end_time, status, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6)

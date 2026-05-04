@@ -1,4 +1,4 @@
-package domain
+package app
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/internships-backend/test-backend-beldurad/internal/apperr"
 )
 
 type Room struct {
@@ -26,13 +25,13 @@ func CreateRoom() *Room {
 
 func (r *Room) Validate() error {
 	if r.Name == "" {
-		return apperr.New(apperr.CodeInvalidState, fmt.Errorf("name is required"))
+		return NewError(ErrCodeInvalidState, fmt.Errorf("name is required"))
 	}
 	if uuid.Validate(r.ID) != nil {
-		return apperr.New(apperr.CodeInvalidState, fmt.Errorf("id is required and need to be valid uuid"))
+		return NewError(ErrCodeInvalidState, fmt.Errorf("id is required and need to be valid uuid"))
 	}
 	if r.CreatedAt.IsZero() {
-		return apperr.New(apperr.CodeInvalidState, fmt.Errorf("createdAt is required"))
+		return NewError(ErrCodeInvalidState, fmt.Errorf("createdAt is required"))
 	}
 	return nil
 }

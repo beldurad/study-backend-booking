@@ -1,11 +1,10 @@
-package domain
+package app
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/internships-backend/test-backend-beldurad/internal/apperr"
 )
 
 const (
@@ -17,7 +16,7 @@ type SlotStatus string
 
 func (s SlotStatus) Validate() error {
 	if s != SlotStatusAvailable && s != SlotStatusUnavailable {
-		return apperr.New(apperr.CodeInvalidState, fmt.Errorf("invalid slot status"))
+		return NewError(ErrCodeInvalidState, fmt.Errorf("invalid slot status"))
 	}
 	return nil
 }
@@ -40,16 +39,16 @@ func CreateSlot() *Slot {
 
 func (s *Slot) Validate() error {
 	if uuid.Validate(s.RoomID) != nil {
-		return apperr.New(apperr.CodeInvalidState, fmt.Errorf("room id need to be valid uuid"))
+		return NewError(ErrCodeInvalidState, fmt.Errorf("room id need to be valid uuid"))
 	}
 	if uuid.Validate(s.ID) != nil {
-		return apperr.New(apperr.CodeInvalidState, fmt.Errorf("id is required and need to be valid uuid"))
+		return NewError(ErrCodeInvalidState, fmt.Errorf("id is required and need to be valid uuid"))
 	}
 	if s.Status.Validate() != nil {
-		return apperr.New(apperr.CodeInvalidState, fmt.Errorf("invalid slot status"))
+		return NewError(ErrCodeInvalidState, fmt.Errorf("invalid slot status"))
 	}
 	if s.CreatedAt.IsZero() {
-		return apperr.New(apperr.CodeInvalidState, fmt.Errorf("createdAt is required"))
+		return NewError(ErrCodeInvalidState, fmt.Errorf("createdAt is required"))
 	}
 	return nil
 }

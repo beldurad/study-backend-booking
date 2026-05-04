@@ -1,4 +1,4 @@
-package apphttp
+package http
 
 import (
 	"context"
@@ -6,8 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/internships-backend/test-backend-beldurad/internal/domain"
-	"github.com/internships-backend/test-backend-beldurad/internal/logger/sl"
+	app "github.com/internships-backend/test-backend-beldurad/internal"
 )
 
 const (
@@ -21,8 +20,8 @@ type RoomCreateDto struct {
 	Capacity    uint   `json:"capacity,omitempty"`
 }
 
-func mapCreateDTOToRoom(dto RoomCreateDto) *domain.Room {
-	return &domain.Room{
+func mapCreateDTOToRoom(dto RoomCreateDto) *app.Room {
+	return &app.Room{
 		Name:        dto.Name,
 		Description: dto.Description,
 		Capacity:    dto.Capacity,
@@ -30,11 +29,11 @@ func mapCreateDTOToRoom(dto RoomCreateDto) *domain.Room {
 }
 
 type CreateResponse struct {
-	domain.Room `json:"room"`
+	app.Room `json:"room"`
 }
 
 type RoomSaver interface {
-	Save(ctx context.Context, room *domain.Room) error
+	Save(ctx context.Context, room *app.Room) error
 }
 
 func SaveRoom(log *slog.Logger, roomSaver RoomSaver) http.HandlerFunc {
@@ -49,7 +48,7 @@ func SaveRoom(log *slog.Logger, roomSaver RoomSaver) http.HandlerFunc {
 
 		err := render.DecodeJSON(r.Body, &dto)
 		if err != nil {
-			log.Error("failed to decode request body", sl.Err(err))
+			log.Error("failed to decode request body")
 			SendResponseByError(err, w, r)
 			return
 		}
@@ -61,7 +60,7 @@ func SaveRoom(log *slog.Logger, roomSaver RoomSaver) http.HandlerFunc {
 
 		err = roomSaver.Save(r.Context(), roomToSave)
 		if err != nil {
-			log.Error("fail during room save", sl.Err(err))
+			log.Error("fail during room save")
 			SendResponseByError(err, w, r)
 			return
 		}
@@ -74,11 +73,11 @@ func SaveRoom(log *slog.Logger, roomSaver RoomSaver) http.HandlerFunc {
 }
 
 type RoomGetter interface {
-	GetAll(ctx context.Context) ([]*domain.Room, error)
+	GetAll(ctx context.Context) ([]*app.Room, error)
 }
 
 type GetResponse struct {
-	Rooms []*domain.Room `json:"rooms"`
+	Rooms []*app.Room `json:"rooms"`
 }
 
 func GetRooms(log *slog.Logger, roomGetter RoomGetter) http.HandlerFunc {
@@ -91,7 +90,7 @@ func GetRooms(log *slog.Logger, roomGetter RoomGetter) http.HandlerFunc {
 
 		rooms, err := roomGetter.GetAll(r.Context())
 		if err != nil {
-			log.Error("failed to get rooms", sl.Err(err))
+			log.Error("failed to get rooms")
 			SendResponseByError(err, w, r)
 			return
 		}
@@ -103,7 +102,7 @@ func GetRooms(log *slog.Logger, roomGetter RoomGetter) http.HandlerFunc {
 		}
 
 		response := GetResponse{
-			Rooms: make([]*domain.Room, 0, len(rooms)),
+			Rooms: make([]*app.Room, 0, len(rooms)),
 		}
 
 		for _, room := range rooms {

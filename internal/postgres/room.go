@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/internships-backend/test-backend-beldurad/internal/domain"
+	app "github.com/internships-backend/test-backend-beldurad/internal"
 )
 
 type RoomService struct {
@@ -21,7 +21,7 @@ func NewRoomService(db *sql.DB, log *slog.Logger) *RoomService {
 	}
 }
 
-func (s *RoomService) Save(ctx context.Context, room *domain.Room) error {
+func (s *RoomService) Save(ctx context.Context, room *app.Room) error {
 	const op = "room.repository.CreateRoom"
 	const query = `
         INSERT INTO room (name, description, capacity, created_at)
@@ -56,7 +56,7 @@ func (s *RoomService) Save(ctx context.Context, room *domain.Room) error {
 	return nil
 }
 
-func (s *RoomService) GetAll(ctx context.Context) ([]*domain.Room, error) {
+func (s *RoomService) GetAll(ctx context.Context) ([]*app.Room, error) {
 	const op = "room.repository.GetAllRooms"
 
 	query := `
@@ -72,9 +72,9 @@ func (s *RoomService) GetAll(ctx context.Context) ([]*domain.Room, error) {
 	}
 	defer rows.Close()
 
-	var rooms []*domain.Room
+	var rooms []*app.Room
 	for rows.Next() {
-		var room domain.Room
+		var room app.Room
 		err := rows.Scan(
 			&room.ID,
 			&room.Name,

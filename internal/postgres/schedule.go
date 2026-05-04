@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/internships-backend/test-backend-beldurad/internal/domain"
+	app "github.com/internships-backend/test-backend-beldurad/internal"
 )
 
 type ScheduleService struct {
@@ -22,7 +22,7 @@ func NewScheduleService(db *sql.DB, log *slog.Logger) *ScheduleService {
 	}
 }
 
-func (s *ScheduleService) Save(ctx context.Context, schedule *domain.Schedule) error {
+func (s *ScheduleService) Save(ctx context.Context, schedule *app.Schedule) error {
 
 	if err := schedule.Validate(); err != nil {
 		return err
@@ -54,7 +54,7 @@ func (s *ScheduleService) Save(ctx context.Context, schedule *domain.Schedule) e
 	return nil
 }
 
-func saveSchedule(ctx context.Context, tx *sql.Tx, schedule *domain.Schedule) error {
+func saveSchedule(ctx context.Context, tx *sql.Tx, schedule *app.Schedule) error {
 	const query = `
 		INSERT INTO schedule (id, room_id, created_at)
 		VALUES ($1, $2, NOW())
@@ -71,7 +71,7 @@ func saveSchedule(ctx context.Context, tx *sql.Tx, schedule *domain.Schedule) er
 	return nil
 }
 
-func getAllSchedules(ctx context.Context, db *sql.DB) ([]*domain.Schedule, error) {
+func getAllSchedules(ctx context.Context, db *sql.DB) ([]*app.Schedule, error) {
 	const query = `
 		SELECT id, room_id, created_at, start_time, end_time
 		FROM schedule
@@ -84,10 +84,10 @@ func getAllSchedules(ctx context.Context, db *sql.DB) ([]*domain.Schedule, error
 	}
 	defer rows.Close()
 
-	schedules := make([]*domain.Schedule, 0)
+	schedules := make([]*app.Schedule, 0)
 
 	for rows.Next() {
-		var schedule domain.Schedule
+		var schedule app.Schedule
 		err := rows.Scan(
 			&schedule.ID,
 			&schedule.RoomID,

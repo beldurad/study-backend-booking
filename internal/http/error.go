@@ -1,21 +1,21 @@
-package apphttp
+package http
 
 import (
 	"net/http"
 
-	"github.com/internships-backend/test-backend-beldurad/internal/apperr"
+	app "github.com/internships-backend/test-backend-beldurad/internal"
 )
 
 func SendResponseByError(err error, w http.ResponseWriter, r *http.Request) {
-	appError, ok := err.(apperr.Error)
+	appError, ok := err.(app.Error)
 	if !ok {
 		WriteResponseInternalError(w, r)
 		return
 	}
 	switch appError.Code {
-	case apperr.CodeInvalidState, apperr.CodeResourceAlreadyExists:
+	case app.ErrCodeInvalidState, app.ErrCodeResourceAlreadyExists:
 		writeResponseBadRequest(w, r)
-	case apperr.CodeResourceNotFound:
+	case app.ErrCodeResourceNotFound:
 		WriteResponseNotFound(w, r)
 	default:
 		WriteResponseInternalError(w, r)

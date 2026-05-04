@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/internships-backend/test-backend-beldurad/internal/apperr"
+	app "github.com/internships-backend/test-backend-beldurad/internal"
 	"github.com/lib/pq"
 	"github.com/lib/pq/pqerror"
 )
@@ -12,7 +12,7 @@ import (
 func mapDBErr(err error) error {
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return apperr.New(apperr.CodeResourceNotFound, err)
+		return app.NewError(app.ErrCodeResourceNotFound, err)
 	}
 	var pqErr *pq.Error
 	if !errors.As(err, &pqErr) {
@@ -20,12 +20,12 @@ func mapDBErr(err error) error {
 	}
 
 	if pqErr.Code == pqerror.UniqueViolation {
-		return apperr.New(apperr.CodeResourceAlreadyExists, err)
+		return app.NewError(app.ErrCodeResourceAlreadyExists, err)
 	}
 
 	if pqErr.Code == pqerror.CheckViolation {
-		return apperr.New(apperr.CodeInvalidState, err)
+		return app.NewError(app.ErrCodeInvalidState, err)
 	}
 
-	return apperr.New(apperr.CodeUnknown, err)
+	return app.NewError(app.ErrCodeUnknown, err)
 }

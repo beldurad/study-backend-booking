@@ -1,4 +1,4 @@
-package apphttp
+package http
 
 import (
 	"context"
@@ -9,9 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
-	"github.com/internships-backend/test-backend-beldurad/internal/apperr"
-	"github.com/internships-backend/test-backend-beldurad/internal/domain"
-	"github.com/internships-backend/test-backend-beldurad/internal/logger/sl"
+	app "github.com/internships-backend/test-backend-beldurad/internal"
 	"github.com/internships-backend/test-backend-beldurad/internal/parser"
 )
 
@@ -23,18 +21,18 @@ type ScheduleCreateDTO struct {
 	EndTime    string         `json:"endTime"`
 }
 
-func mapCreateDtoToSchedule(log *slog.Logger, dto ScheduleCreateDTO) (*domain.Schedule, error) {
+func mapCreateDtoToSchedule(log *slog.Logger, dto ScheduleCreateDTO) (*app.Schedule, error) {
 
 	startTime, err := parser.ParseTimeToTodayUTC(dto.StartTime)
 	if err != nil {
-		return &domain.Schedule{}, apperr.New(apperr.CodeInvalidState, fmt.Errorf("error while parsing:%w", err))
+		return &app.Schedule{}, app.NewError(app.ErrCodeInvalidState, fmt.Errorf("error while parsing:%w", err))
 	}
 	endTime, err := parser.ParseTimeToTodayUTC(dto.EndTime)
 	if err != nil {
-		return &domain.Schedule{}, apperr.New(apperr.CodeInvalidState, fmt.Errorf("error while parsing:%w", err))
+		return &app.Schedule{}, app.NewError(app.ErrCodeInvalidState, fmt.Errorf("error while parsing:%w", err))
 	}
 
-	result := domain.CreateSchedule()
+	result := app.CreateSchedule()
 	if dto.ID != "" {
 		result.ID = dto.ID
 	}
@@ -46,7 +44,7 @@ func mapCreateDtoToSchedule(log *slog.Logger, dto ScheduleCreateDTO) (*domain.Sc
 }
 
 type ScheduleSaver interface {
-	Create(context.Context, *domain.Schedule) error
+	Create(context.Context, *app.Schedule) error
 }
 
 type CreateRequest struct {
@@ -68,7 +66,7 @@ func CreateSchedule(log *slog.Logger, scheduleSaver ScheduleSaver) http.HandlerF
 
 		err := render.DecodeJSON(r.Body, &dto)
 		if err != nil {
-			log.Error("failed to decode request body", sl.Err(err))
+			log.Error("failed to decode request body")
 			SendResponseByError(err, w, r)
 			return
 		}
@@ -81,13 +79,13 @@ func CreateSchedule(log *slog.Logger, scheduleSaver ScheduleSaver) http.HandlerF
 		schedule, err := mapCreateDtoToSchedule(log, dto)
 
 		if err != nil {
-			log.Error("fail during mapping", sl.Err(err))
+			log.Error("fail during mapping")
 			SendResponseByError(err, w, r)
 			return
 		}
 
 		if err = schedule.Validate(); err != nil {
-			log.Error("validation error", sl.Err(err))
+			log.Error("validation error")
 			SendResponseByError(err, w, r)
 			return
 		}
@@ -95,7 +93,7 @@ func CreateSchedule(log *slog.Logger, scheduleSaver ScheduleSaver) http.HandlerF
 		err = scheduleSaver.Create(r.Context(), schedule)
 
 		if err != nil {
-			log.Error("fail during schedule save", sl.Err(err))
+			log.Error("fail during schedule save")
 			SendResponseByError(err, w, r)
 			return
 		}
