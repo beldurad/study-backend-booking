@@ -74,20 +74,23 @@ func (s *UserService) GetUser(ctx context.Context, id string) (*app.User, error)
 	return user, nil
 }
 
-func (s *UserService) CreateUser(ctx context.Context, user *app.User) error {
-	if user.PasswordHash == "" {
-		hash, err := s.PasswordHasher.Hash(user.Password)
-		if err != nil {
-			return app.NewError(app.ErrCodeUnknown, err)
-		}
-		user.PasswordHash = hash
+func (s *UserService) CreateUser(ctx context.Context, dto *app.UserCreateDTO) (*app.User, error) {
+	if err := dto.Validate(); err != nil {
+		return nil, app.NewError(app.ErrCodeInvalidState, err)
 	}
-	if err := user.Validate(); err != nil {
-		return app.NewError(app.ErrCodeInvalidState, err)
+	passwordHash, err := s.PasswordHasher.Hash(dto.Password)
+	if err != nil {
+		return nil, app.NewError(app.ErrCodeUnknown, err)
 	}
+
+	user := app.CreateUser()
+	user.Email = app.Email(dto.Email)
+	user.Role = app.Role(dto.Role)
+	user.PasswordHash = passwordHash
+
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
-		return app.NewError(app.ErrCodeUnknown, err)
+		return nil, app.NewError(app.ErrCodeUnknown, err)
 	}
 	defer func() {
 		if err != nil {
@@ -96,9 +99,9 @@ func (s *UserService) CreateUser(ctx context.Context, user *app.User) error {
 		tx.Commit()
 	}()
 	if err := createUser(ctx, tx, user); err != nil {
-		return mapDBErr(err)
+		return nil, mapDBErr(err)
 	}
-	return nil
+	return user, nil
 }
 
 func createUser(ctx context.Context, tx *sql.Tx, user *app.User) error {

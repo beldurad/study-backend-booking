@@ -73,26 +73,15 @@ func Login(log *slog.Logger, authService app.AuthService) http.HandlerFunc {
 	}
 }
 
-type registerRequest struct {
-	Email   string `json:"email"`
-	Pasword string `json:"password"`
-	Role    string `json:"role"`
-}
-
 func Register(log *slog.Logger, authService app.AuthService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		var req registerRequest
+		var req app.UserCreateDTO
 		if err := render.DecodeJSON(r.Body, &req); err != nil {
 			SendResponseByError(err, w, r)
 			return
 		}
-		user := app.CreateUser(
-			app.Email(req.Email),
-			app.Role(req.Role),
-			req.Pasword,
-		)
-		auth, err := authService.Register(r.Context(), user)
+		auth, err := authService.Register(r.Context(), &req)
 		if err != nil {
 			SendResponseByError(err, w, r)
 			return

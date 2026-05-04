@@ -21,7 +21,6 @@ var (
 		Email:        "admin@test.com",
 		Role:         AdminRole,
 		CreatedAt:    time.Now(),
-		Password:     "1",
 		PasswordHash: "1",
 	}
 	DummyUser = &User{
@@ -29,7 +28,6 @@ var (
 		Email:        "user@test.com",
 		Role:         UserRole,
 		CreatedAt:    time.Now(),
-		Password:     "1",
 		PasswordHash: "1",
 	}
 )
@@ -39,16 +37,12 @@ type User struct {
 	Email        Email
 	Role         Role
 	CreatedAt    time.Time
-	Password     string
 	PasswordHash string
 }
 
-func CreateUser(email Email, role Role, password string) *User {
+func CreateUser() *User {
 	return &User{
 		ID:        uuid.NewString(),
-		Email:     email,
-		Role:      role,
-		Password:  password,
 		CreatedAt: time.Now(),
 	}
 }
@@ -66,7 +60,7 @@ func (u *User) Validate() error {
 	if u.CreatedAt.IsZero() {
 		return NewError(ErrCodeInvalidState, fmt.Errorf("createdAt is required"))
 	}
-	if u.Password == "" {
+	if u.PasswordHash == "" {
 		return NewError(ErrCodeInvalidState, fmt.Errorf("password is required"))
 	}
 	return nil
@@ -80,10 +74,29 @@ func IsUserClient(role string) bool {
 	return role == UserRole
 }
 
+type UserCreateDTO struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
+}
+
+func (u *UserCreateDTO) Validate() error {
+	if u.Email == "" {
+		return NewError(ErrCodeInvalidState, fmt.Errorf("email is required"))
+	}
+	if u.Password == "" {
+		return NewError(ErrCodeInvalidState, fmt.Errorf("password is required"))
+	}
+	if u.Role == "" {
+		return NewError(ErrCodeInvalidState, fmt.Errorf("role is required"))
+	}
+	return nil
+}
+
 type UserService interface {
 	GetDummyUser(ctx context.Context, role Role) (*User, error)
 	GetUserByEmail(ctx context.Context, email Email) (*User, error)
-	CreateUser(ctx context.Context, user *User) error
+	CreateUser(ctx context.Context, user *UserCreateDTO) (*User, error)
 }
 
 type PasswordHasher interface {

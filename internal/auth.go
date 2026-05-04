@@ -41,5 +41,5 @@ type AuthService interface {
 	DummyAuthenticate(ctx context.Context, role Role) (*Auth, error)
 	AuthenticateByEmail(ctx context.Context, email Email, password string) (*Auth, error)
 	AuthenticateByToken(ctx context.Context, token string) (*Auth, error)
-	Register(ctx context.Context, user *User) (*Auth, error)
+	Register(ctx context.Context, user *UserCreateDTO) (*Auth, error)
 }

@@ -128,8 +128,8 @@ func (s *AuthService) AuthenticateByToken(ctx context.Context, token string) (*a
 	}
 }
 
-func (s *AuthService) Register(ctx context.Context, user *app.User) (*app.Auth, error) {
-	if err := user.Validate(); err != nil {
+func (s *AuthService) Register(ctx context.Context, dto *app.UserCreateDTO) (*app.Auth, error) {
+	if err := dto.Validate(); err != nil {
 		return nil, app.NewError(app.ErrCodeInvalidState, err)
 	}
 
@@ -143,8 +143,8 @@ func (s *AuthService) Register(ctx context.Context, user *app.User) (*app.Auth, 
 		}
 		tx.Commit()
 	}()
-
-	if err := s.UserService.CreateUser(ctx, user); err != nil {
+	user, err := s.UserService.CreateUser(ctx, dto)
+	if err != nil {
 		return nil, err
 	}
 	auth, err := generateAuth(user, s.secret)
